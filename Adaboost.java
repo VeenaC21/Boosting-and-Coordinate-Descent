@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class Adaboost
- {
+
+public class Adaboost2 {
 	static int[][] input = new int[80][23];
 	static ArrayList<DecisionTree> trees = new ArrayList<DecisionTree>();
 	static double[] weights = new double[80];
@@ -14,7 +14,7 @@ public class Adaboost
 	static int[] finaloutput = new int[187];
 	static HashMap<Integer, Double> alphalist = new HashMap<Integer, Double>();
 
-	static int M = 20;
+	static int M = 5;
 
 	public static void main(String[] args) throws NumberFormatException,
 			IOException {
@@ -37,14 +37,18 @@ public class Adaboost
 		for (int i = 0; i <= 79; i++) {
 			weights[i] = 1 / 80.0;
 		}
-		generateDT1();
+		
+		
+		generateDT2();
 		System.out.println(trees.size());
 		br.close();
 
 		boosting();
 
-		// int count2=0; for(DecisionTree t: trees){ t.bfs(t.root); count2++;
-		// if(count2>16){ break; } }
+		
+		 //int count2=0; for(DecisionTree t: trees){ t.bfs(t.root); count2++;
+		 //if(count2>16){ break; } }
+		 
 
 		int counttest = 0;
 		br = new BufferedReader(new FileReader(
@@ -66,19 +70,20 @@ public class Adaboost
 		int hm;
 		double result = 0;
 		int finalaccuracy = 0;
-
+		
 		int[][] acctest = test;
-		int rows = 187;
-		for (int i = 0; i <= rows - 1; i++) {
+		int rows=187;
+		first:for (int i = 0; i <= rows-1; i++) {
 
 			for (int m = 1; m <= M; m++) {
 				alp = alphalist.get(m);
-				// System.out.println(getOutput(map.get(m).root, acctest, i));
+				map.get(m).bfs(map.get(m).root);
+				if(m==3){
+					break first;
+				}
 				hm = (getOutput(map.get(m).root, acctest, i) == 0) ? -1 : 1;
 				result += alp * hm;
 			}
-
-			// System.out.println(result);
 			if (result > 0) {
 				finaloutput[i] = 1;
 			} else {
@@ -86,68 +91,129 @@ public class Adaboost
 			}
 			result = 0;
 		}
-		for (int i = 0; i <= rows - 1; i++) {
-			// System.out.println(finaloutput[i]);
+		for (int i = 0; i <= rows-1; i++) {
+			//System.out.println(finaloutput[i]);
 			if (acctest[i][0] == finaloutput[i]) {
 				finalaccuracy++;
 			}
 		}
 
-		System.out.println((double) finalaccuracy / rows);
+		System.out.println(finalaccuracy);
 
-		int countind = 0;
-		double total = 0.0;
-		for (DecisionTree t : trees) {
-			for (int i = 0; i <= rows - 1; i++) {
-				if (acctest[i][0] == getOutput(t.root, acctest, i)) {
+		
+		/*
+		int countind=0;
+		double total=0.0;
+		for(DecisionTree t: trees){
+			for (int i = 0; i <= rows-1; i++) {
+				if(acctest[i][0]==getOutput(t.root, acctest, i)){
 					countind++;
 				}
 			}
-			// System.out.println(t.depth+" "+countind/80.0);
-			total += (double) countind / rows;
-			countind = 0;
+		//	System.out.println(t.depth+" "+countind/80.0);
+			total+=(double)countind/rows;
+			countind=0;
 		}
-
-		System.out.println((double) total / trees.size());
-
+		
+		
+		System.out.println((double)total/trees.size());*/
+		
 	}
 
-	public static void generateDT1() {
+	public static void generateDT2() {
+		String bin=null;
 		Node root;
 		DecisionTree tree;
-		Node leafchild0;
-		Node leafchild1;
-		String bin;
+		Node child1;
+		Node child2;
 		for (int r = 1; r <= 22; r++) {
+			for (int c1 = 1; c1 <= 22; c1++) {
+				if (c1 != r) {
 
-			for (int i = 0; i <= 3; i++) {
+					for (int c2 = 1; c2 <= 22; c2++) {
+						if (c2 != r) {
 
-				bin = Integer.toBinaryString(i);
-				if (bin.length() < 2)
-					bin = "0" + bin;
-				leafchild0 = new Node(100);
-				leafchild0.parentCharacteristic = 0;
-				leafchild0.yesOrNo = bin.charAt(0) - 48;
-				leafchild1 = new Node(100);
-				leafchild1.parentCharacteristic = 1;
-				leafchild1.yesOrNo = bin.charAt(1) - 48;
+						// for (int l = 0; l <= 15; l++) {
 
-				root = new Node(r);
-				root.yesOrNo = 3;
+//							bin = Integer.toBinaryString(l);
+							child1 = new Node(c1);
+							child1.yesOrNo = 3;
+							child1.parentCharacteristic = 0;
 
-				root.children.add(leafchild0);
-				root.children.add(leafchild1);
+							child2 = new Node(c2);
+							child2.yesOrNo = 3;
+							child2.parentCharacteristic = 1;
 
-				tree = new DecisionTree(root);
-				// tree.bfs(tree.root);
-				trees.add(tree);
+							Node child1leaf0 = new Node(100);
+							child1leaf0.parentCharacteristic = 0;
+							Node child1leaf1 = new Node(100);
+							child1leaf1.parentCharacteristic = 1;
+							Node child2leaf0 = new Node(100);
+							child2leaf0.parentCharacteristic = 0;
+							Node child2leaf1 = new Node(100);
+							child2leaf1.parentCharacteristic = 1;
+
+							child1.children.add(child1leaf0);
+							child1.children.add(child1leaf1);
+							child2.children.add(child2leaf0);
+							child2.children.add(child2leaf1);
+
+							child1leaf0.yesOrNo = getLabel(r, 0, c1, 0);
+							child1leaf1.yesOrNo = getLabel(r, 0, c1, 1);
+							child2leaf0.yesOrNo = getLabel(r, 1, c2, 0);
+							child2leaf1.yesOrNo = getLabel(r, 1, c2, 1);
+
+							root = new Node(r);
+							root.yesOrNo = 3;
+							root.children.add(child1);
+							root.children.add(child2);
+							tree = new DecisionTree(root);
+							// tree.bfs(tree.root);
+							trees.add(tree);
+						//	 }
+
+						}
+					}
+				}
 			}
+		}
+	}
 
+	public static int getLabel(int root, int rootchar, int parent,
+			int characteristic) {
+
+		ArrayList<Integer> records = new ArrayList<Integer>();
+		for (int i = 0; i <= 79; i++) {
+			if (input[i][root] == rootchar) {
+				if (input[i][parent] == characteristic) {
+					records.add(i);
+				}
+			}
 		}
 
+		double countn = 0;
+		double counta = 0;
+		for (int i : records) {
+			// if (input[i][0] == 0) countn++; else counta++;
+			 
+			 if (input[i][0] == 0) 
+				 countn+=weights[i];
+			 else 
+				 counta+=weights[i];
+		}
+
+		
+		  if (countn > counta) { return 0; } else return 1;
+		 
+
+		
 	}
 
 	public static void boosting() {
+
+		/*for (int i = 0; i <= 79; i++) {
+			weights[i] = 1 / 80.0;
+		}*/
 		double error;
 		double alpha;
 		double indError;
@@ -168,7 +234,7 @@ public class Adaboost
 						// System.out.println(indError+" "+weights[r]);
 					}
 				}
-				if (indError <= error) {
+				if (indError < error) {
 
 					error = indError;
 					selected = t;
@@ -192,16 +258,30 @@ public class Adaboost
 			map.put(m, selected);
 			System.out.println("error for the tree: " + error + " alpha: "
 					+ alpha);
-
+			
+			
+			for(DecisionTree t: trees){
+				//System.out.println(t.root.attributeNo+" "+t.root.children.get(0).attributeNo);
+				t.root.children.get(0).children.get(0).yesOrNo=getLabel(t.root.attributeNo, 0, t.root.children.get(0).attributeNo, 0);
+				t.root.children.get(0).children.get(1).yesOrNo=getLabel(t.root.attributeNo, 0, t.root.children.get(0).attributeNo, 1);
+				t.root.children.get(1).children.get(0).yesOrNo=getLabel(t.root.attributeNo, 1, t.root.children.get(1).attributeNo, 0);
+				t.root.children.get(1).children.get(1).yesOrNo=getLabel(t.root.attributeNo, 1, t.root.children.get(1).attributeNo, 1);
+			}
+		
 		}
+		
+		
 
 	}
 
 	public static boolean traverse(Node root, int[][] example, int row) {
+
+		// System.out.println(root.yesOrNo);
 		if (root.yesOrNo != 3) {
 
 			if (root.yesOrNo == 1) {
 				if (example[row][0] == 1) {
+					// System.out.println("y");
 					return true;
 
 				} else
@@ -209,6 +289,7 @@ public class Adaboost
 
 			} else if (root.yesOrNo == 0) {
 				if (example[row][0] == 0) {
+					// System.out.println("yy");
 					return true;
 				} else
 					return false;
@@ -222,6 +303,7 @@ public class Adaboost
 
 			for (Node n : root.children) {
 				if (n.parentCharacteristic == givenatt) {
+					// System.out.println("att: "+root.attributeNo+" given: "+givenatt);
 					boolean b = traverse(n, example, row);
 					return b;
 				}
@@ -241,6 +323,7 @@ public class Adaboost
 		} else {
 			int givenatt = example[row][root.attributeNo];
 
+			System.out.println(givenatt);
 			for (Node n : root.children) {
 				if (n.parentCharacteristic == givenatt) {
 					// System.out.println("att: "+root.attributeNo+" given: "+givenatt);
@@ -252,4 +335,6 @@ public class Adaboost
 		return -1;
 
 	}
+
+
 }
